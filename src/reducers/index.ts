@@ -1,8 +1,8 @@
 import { combineReducers } from '@reduxjs/toolkit';
-import exampleReducer from './exampleSlice';
+import collectionsSlice from './collectionsSlice';
 
 const rootReducer = combineReducers({
-  example: exampleReducer,
+  collections: collectionsSlice,
 });
 
 export default rootReducer;

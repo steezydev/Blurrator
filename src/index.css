@@ -1,3 +1,13 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.layout {
+  /* 1100px */
+  max-width: 90rem;
+  @apply mx-auto w-11/12;
+}
+
+.body {
+  background-color: #151515 !important;
+}
