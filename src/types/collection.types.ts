@@ -52,7 +52,7 @@ export type TUserBid = {
 export interface ICollectionData {
   listingAmount: number | null;
   floorPrice: number | null;
-  topBid: TBid | null;
+  topBid: number | null;
   currentBid: TUserBid | null;
 }
 

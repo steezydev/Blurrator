@@ -43,7 +43,7 @@ export default function Collection({
         <div className='flex flex-row justify-around border-0 border-y border-solid border-y-white/10 py-2'>
           <Barrel title='floor'>{collectionData.data.floorPrice}</Barrel>
           <Barrel title='listed'>{collectionData.data.listingAmount}</Barrel>
-          <Barrel title='top'>{collectionData.data.topBid?.value}</Barrel>
+          <Barrel title='top'>{collectionData.data.topBid}</Barrel>
         </div>
         <ActivityTable activityData={collectionData.activity} />
       </div>
