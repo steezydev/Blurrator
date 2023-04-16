@@ -1,27 +1,18 @@
+import { getWalletAddress } from '@/lib/getWallet';
+import { safeSub } from '@/lib/safeNumbers';
+import { subscribeToBidStats } from '@/services/socket';
 import {
+  ActivityItem,
+  Collections,
   EActivityType,
   ECollectionMode,
   ECollectionStatus,
   EMarketplace,
-  ICollection,
+  IOtherBids,
   TActivity,
 } from '@/types/collection.types';
+import { notifications } from '@mantine/notifications';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-
-interface ActivityItem {
-  id: string;
-  tokenId: string;
-  fromAddress: string;
-  toAddress: string;
-  createdAt: string;
-  transactionHash: string;
-  eventType: string;
-  price: string;
-  priceUnit: string;
-  marketplace: string;
-}
-
-type Collections = { [key: string]: ICollection };
 
 const initialState: Collections = {};
 
@@ -29,6 +20,45 @@ export const collectionsSlice = createSlice({
   name: 'collections',
   initialState,
   reducers: {
+    addBid: (
+      state,
+      action: PayloadAction<{
+        address: string;
+        bidValue: number;
+        bidQty: number;
+      }>
+    ) => {
+      const address = action.payload.address.toLowerCase();
+      const bidValue = action.payload.bidValue;
+      const bidQty = action.payload.bidQty;
+
+      state[address].data.currentBid = {
+        value: bidValue,
+        size: bidQty,
+        createdAt: new Date().toISOString(),
+      };
+    },
+    removeBid: (
+      state,
+      action: PayloadAction<{
+        address: string;
+      }>
+    ) => {
+      const address = action.payload.address.toLowerCase();
+      state[address].data.currentBid = null;
+    },
+    updateBank: (
+      state,
+      action: PayloadAction<{
+        address: string;
+        bank: number;
+      }>
+    ) => {
+      const address = action.payload.address.toLowerCase();
+      const bank = action.payload.bank;
+
+      state[address].config.bank = bank;
+    },
     addCollection: (
       state,
       action: PayloadAction<{
@@ -41,7 +71,7 @@ export const collectionsSlice = createSlice({
 
       // TODO: Alert if collection already exists
       if (state[address]) {
-        return state;
+        return;
       }
 
       state[address] = {
@@ -59,8 +89,10 @@ export const collectionsSlice = createSlice({
         bidsData: {},
         activity: [],
       };
-
-      // TODO: Subscribe to sockets
+    },
+    removeCollection: (state, action: PayloadAction<{ address: string }>) => {
+      const address = action.payload.address.toLowerCase();
+      delete state[address];
     },
     updateTopBid: (
       state,
@@ -70,6 +102,14 @@ export const collectionsSlice = createSlice({
       const topBid = action.payload.topBid;
 
       state[address].data.topBid = topBid;
+
+      Object.keys(state[address].bidsData).forEach(async (bid) => {
+        const price = parseFloat(bid);
+
+        if (price > topBid) {
+          delete state[address].bidsData[bid];
+        }
+      });
     },
     updateFloorPrice: (
       state,
@@ -95,9 +135,22 @@ export const collectionsSlice = createSlice({
     ) => {
       const address = action.payload.address.toLowerCase();
       const items = action.payload.items;
+      const currentBid = state[address].data.currentBid;
 
       items.forEach((item) => {
         if (item.eventType === 'ORDER_CREATED' || item.eventType === 'SALE') {
+          if (item.toAddress === getWalletAddress() && currentBid !== null) {
+            currentBid.size--;
+            if (currentBid.size == 0) {
+              state[address].data.currentBid = null;
+            }
+            notifications.show({
+              color: 'orange',
+              title: `Bid was bought`,
+              message: `Bid for collection "${state[address].collectionName}" was bought. You have ${currentBid.size} bids left`,
+            });
+          }
+
           const activityItem: TActivity = {
             id: parseInt(item.id),
             tokenId: parseInt(item.tokenId),
@@ -117,41 +170,76 @@ export const collectionsSlice = createSlice({
                 : EMarketplace.opensea,
           };
 
-          return state[address].activity.push(activityItem);
+          state[address].activity.unshift(activityItem);
         }
       });
+
+      if (state[address].activity.length > 40) {
+        state[address].activity.length = 40;
+      }
     },
     updatedBidsData: (
       state,
       action: PayloadAction<{
         address: string;
-        updates: {
-          price: string;
-          executableSize: number;
-          bidderCount: number;
-        }[];
+        updates: IOtherBids[];
       }>
     ) => {
       const address = action.payload.address.toLowerCase();
       const updates = action.payload.updates;
+      const topBidValue = state[address].data.topBid;
 
-      // TODO: Detect top 5 bids
+      if (!topBidValue) {
+        return;
+      }
 
       updates.forEach((updates) => {
-        const price = updates.price;
-        const executableSize = updates.executableSize;
-        const bidderCount = updates.bidderCount;
+        const price = parseFloat(updates.price);
+
+        if (safeSub(topBidValue, price) > 0.04) {
+          return;
+        }
+
+        if (updates.executableSize === 0) {
+          delete state[address].bidsData[price];
+          return;
+        }
 
         state[address].bidsData[price] = {
-          value: parseFloat(price),
-          size: executableSize,
-          biddersCount: bidderCount,
+          value: price,
+          size: updates.executableSize,
+          biddersCount: updates.bidderCount,
         };
       });
+
+      if (!state[address].bidsData[topBidValue]) {
+        state[address].status = ECollectionStatus.init;
+      } else if (
+        Object.keys(state[address].bidsData).length >= 5 &&
+        state[address].status === ECollectionStatus.init
+      ) {
+        state[address].status = ECollectionStatus.ready;
+        notifications.show({
+          color: 'grape',
+          title: `Collection finished syncing`,
+          message: `Collection "${state[address].collectionName}" finished syncing data. The bid could be placed now.`,
+        });
+      }
     },
   },
 });
 
-export const { addCollection } = collectionsSlice.actions;
+export const {
+  addBid,
+  removeBid,
+  updateBank,
+  addCollection,
+  removeCollection,
+  updateTopBid,
+  updateFloorPrice,
+  updateNumberListings,
+  updateActivity,
+  updatedBidsData,
+} = collectionsSlice.actions;
 
 export default collectionsSlice.reducer;

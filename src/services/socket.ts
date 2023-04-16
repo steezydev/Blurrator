@@ -1,3 +1,4 @@
+import { ActivityItem, IOtherBids } from '@/types/collection.types';
 import io from 'socket.io-client';
 
 const socket = io('wss://feeds.prod.blur.io/', {
@@ -21,7 +22,7 @@ export const subscribeToBidStats = (
   address: string,
   callback: (topBidValue: number, topBidTotal: number) => void
 ) => {
-  const channel = `${address}.denormalizer.collectionBidStats`;
+  const channel = `${address.toLocaleLowerCase()}.denormalizer.collectionBidStats`;
 
   return new Promise<boolean>((resolve) => {
     socket.on(channel, (arg) => {
@@ -39,7 +40,7 @@ export const subscribeToFloorUpdates = (
   address: string,
   callback: (floorPrice: number) => void
 ) => {
-  const channel = `${address}.stats.floorUpdate`;
+  const channel = `${address.toLocaleLowerCase()}.stats.floorUpdate`;
 
   return new Promise<boolean>((resolve) => {
     socket.on(channel, (arg) => {
@@ -55,16 +56,13 @@ export const subscribeToFloorUpdates = (
 // Others bids data
 export const subscribeToBidPriceUpdates = (
   address: string,
-  callback: (price: number, executableSize: number) => void
+  callback: (updates: IOtherBids[]) => void
 ) => {
-  const channel = `${address}.denormalizer.collectionBidPriceUpdates`;
+  const channel = `${address.toLocaleLowerCase()}.denormalizer.collectionBidPriceUpdates`;
 
   return new Promise<boolean>((resolve) => {
     socket.on(channel, (arg) => {
-      callback(
-        parseFloat(arg.updates[0].price),
-        parseInt(arg.updates[0].executableSize)
-      );
+      callback(arg.updates);
     });
 
     socket.emit('subscribe', [channel], (response: any) => {
@@ -78,7 +76,7 @@ export const subscribeToListingsUpdates = (
   address: string,
   callback: (numberListings: number) => void
 ) => {
-  const channel = `${address}.feeds.collections.updatedNumberListings`;
+  const channel = `${address.toLocaleLowerCase()}.feeds.collections.updatedNumberListings`;
 
   return new Promise<boolean>((resolve) => {
     socket.on(channel, (arg) => {
@@ -94,9 +92,9 @@ export const subscribeToListingsUpdates = (
 // Collection activity
 export const subscribeToEventsCreated = (
   address: string,
-  callback: (items: number) => void
+  callback: (items: ActivityItem[]) => void
 ) => {
-  const channel = `${address}.feeds.activity.eventsCreated`;
+  const channel = `${address.toLocaleLowerCase()}.feeds.activity.eventsCreated`;
 
   return new Promise<boolean>((resolve) => {
     socket.on(channel, (arg) => {
@@ -110,19 +108,27 @@ export const subscribeToEventsCreated = (
 };
 
 export const unsubscribeFromBidStats = (address: string) =>
-  unsubscribeFromChannel(`${address}.denormalizer.collectionBidStats`);
+  unsubscribeFromChannel(
+    `${address.toLocaleLowerCase()}.denormalizer.collectionBidStats`
+  );
 
 export const unsubscribeFromFloorUpdates = (address: string) =>
-  unsubscribeFromChannel(`${address}.stats.floorUpdate`);
+  unsubscribeFromChannel(`${address.toLocaleLowerCase()}.stats.floorUpdate`);
 
 export const unsubscribeFromBidPriceUpdates = (address: string) =>
-  unsubscribeFromChannel(`${address}.denormalizer.collectionBidPriceUpdates`);
+  unsubscribeFromChannel(
+    `${address.toLocaleLowerCase()}.denormalizer.collectionBidPriceUpdates`
+  );
 
 export const unsubscribeFromListingsUpdates = (address: string) =>
-  unsubscribeFromChannel(`${address}.feeds.collections.updatedNumberListings`);
+  unsubscribeFromChannel(
+    `${address.toLocaleLowerCase()}.feeds.collections.updatedNumberListings`
+  );
 
 export const unsubscribeFromEventsCreated = (address: string) =>
-  unsubscribeFromChannel(`${address}.feeds.activity.eventsCreated`);
+  unsubscribeFromChannel(
+    `${address.toLocaleLowerCase()}.feeds.activity.eventsCreated`
+  );
 
 const unsubscribeFromChannel = (channel: string) => {
   return new Promise<boolean>((resolve) => {

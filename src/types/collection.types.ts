@@ -1,6 +1,5 @@
 export enum ECollectionStatus {
   init,
-  sync,
   ready,
   transacting,
 }
@@ -29,6 +28,25 @@ export type TBid = {
 export type TBidsData = {
   [key: string]: TBid;
 };
+
+export interface IOtherBids {
+  price: string;
+  executableSize: number;
+  bidderCount: number;
+}
+
+export interface ActivityItem {
+  id: string;
+  tokenId: string;
+  fromAddress: string;
+  toAddress: string;
+  createdAt: string;
+  transactionHash: string;
+  eventType: string;
+  price: string;
+  priceUnit: string;
+  marketplace: string;
+}
 
 export type TActivity = {
   id: number;
@@ -60,6 +78,8 @@ export interface ICollectionConfig {
   barrier?: number;
   bank?: number;
 }
+
+export type Collections = { [key: string]: ICollection };
 
 export interface ICollection {
   collectionName: string;

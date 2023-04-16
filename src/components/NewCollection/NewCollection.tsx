@@ -1,15 +1,14 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Button, Drawer, TextInput } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { useForm } from '@mantine/form';
 
-import { useDispatch } from 'react-redux';
-import { addCollection } from '@/reducers/collectionsSlice';
 import { isAddress } from 'ethers';
+import useBids from '@/hooks/useBids';
 
 export default function NewCollection() {
   const [opened, { open, close }] = useDisclosure(false);
-  const dispatch = useDispatch();
+  const { handleAddCollection } = useBids();
 
   const form = useForm({
     initialValues: { name: '', address: '' },
@@ -21,8 +20,9 @@ export default function NewCollection() {
   });
 
   const handleAdd = (values: { name: string; address: string }) => {
-    dispatch(addCollection({ name: values.name, address: values.address }));
+    handleAddCollection(values.name, values.address);
     close();
+    form.reset();
   };
 
   return (

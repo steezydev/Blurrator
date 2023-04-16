@@ -7,8 +7,6 @@ import { useAppSelector } from '@/hooks';
 const Newtab = () => {
   const collections = useAppSelector((state) => state.collections);
 
-  console.log(collections);
-
   return (
     <Layout>
       <section className='layout mt-10 min-h-[80vh]'>
