@@ -9,7 +9,7 @@ const Popup = () => {
 
   return (
     <div>
-      <div className='flex flex-col items-start gap-2 px-3 py-4 pb-8'>
+      <div className='flex w-32 flex-col items-start gap-2 px-3 py-4 pb-8'>
         <span>
           <Button variant='subtle' onClick={openNewTab}>
             dashboard
