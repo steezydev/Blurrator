@@ -78,12 +78,3 @@ _Collection card in syncing process_
 
 The software is provided "AS IS", without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose and noninfringement. In no event shall the authors or copyright holders be liable for any claim, damages or other liability, whether in an action of contract, tort or otherwise, arising from, out of or in connection with the software or the use or other dealings in the software. Use of this software is at your own risk. The author assumes no responsibility for any financial loss or damages caused by the exploitation or failure of this software.
 
----
-
-**&copy; 2024 steezy | All rights reserved.**
-
-_This project is licensed under the [MIT License](https://opensource.org/license/mit/). For more information, please see the license file._
-
-_Connect with me: [GitHub](https://github.com/steezydev) • [LinkedIn](https://www.linkedin.com/in/ivanilichevv/) • [Telegram](https://t.me/steezydev)_
-
-_Crafted with ❤️ and a pursuit of excellence._
